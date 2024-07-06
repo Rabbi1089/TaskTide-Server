@@ -1,7 +1,7 @@
 const express = require('express')
 const cors = require('cors')
 require('dotenv').config()
-const { MongoClient, ServerApiVersion } = require('mongodb');
+const { MongoClient, ServerApiVersion, ObjectId } = require('mongodb');
 const port = process.env.PORT || 9000;
 
 const app = express()
@@ -37,12 +37,27 @@ async function run() {
 
     // get data from jobcollection
 
-    const jobcollection = client.db('TaskTide').collection('Jobs');
+    const jobCollection = client.db('TaskTide').collection('Jobs');
+    const bidCollection = client.db('TaskTide').collection('bids');
 
     app.get('/jobs', async (req, res) => {
-        const result = await jobcollection.find().toArray()
+        const result = await jobCollection.find().toArray()
         res.send(result)
     })
+    app.get('/jobs/:id', async (req, res) => {
+      const id = req.params.id
+      const query = { _id: new ObjectId(id) }
+      const result = await jobCollection.findOne(query);
+      res.send(result)
+    })
+
+    app.post('/bid', async (req, res) => {
+        const bidData = req.body;
+        const result = await  bidCollection.insertOne(bidData);
+        res.send(result);
+    })
+
+
   } finally {
 //await deleted
   }
