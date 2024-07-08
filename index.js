@@ -72,7 +72,12 @@ async function run() {
       const result = await jobCollection.find(query).toArray()
       res.send(result)
     })
-
+app.delete('/job/:id', async (req, res) => {
+  const id = req.params.id;
+  const query = {_id : new ObjectId(id)}
+  const result = await jobCollection.deleteOne(query)
+  res.send(result)
+})
 
   } finally {
 //await deleted
