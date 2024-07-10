@@ -2,7 +2,7 @@ const express = require('express')
 const cors = require('cors')
 require('dotenv').config()
 const { MongoClient, ServerApiVersion, ObjectId } = require('mongodb');
-const port = process.env.PORT || 9000;
+const port = process.env.PORT || 9000
 
 const app = express()
 
@@ -40,11 +40,14 @@ async function run() {
     const jobCollection = client.db('TaskTide').collection('Jobs');
     const bidCollection = client.db('TaskTide').collection('bids');
 
+        // Get all jobs data from db
     app.get('/jobs', async (req, res) => {
         const result = await jobCollection.find().toArray()
-        res.send(result)
+        res.send(result);
     })
-    app.get('/jobs/:id', async (req, res) => {
+
+    // Get a single job data from db using job id
+    app.get('/job/:id', async (req, res) => {
       const id = req.params.id
       const query = { _id: new ObjectId(id) }
       const result = await jobCollection.findOne(query);
@@ -66,18 +69,21 @@ async function run() {
     })
 
     // get all jobs posted by a specific user
-    app.get('/job/:email' , async (req, res) => {
+    app.get('/jobs/:email' , async (req, res) => {
       const email = req.params.email
       const query = { 'buyer.email' : email}
       const result = await jobCollection.find(query).toArray()
       res.send(result)
     })
-app.delete('/job/:id', async (req, res) => {
-  const id = req.params.id;
-  const query = {_id : new ObjectId(id)}
-  const result = await jobCollection.deleteOne(query)
-  res.send(result)
-})
+    // delete a job data from db
+    app.delete('/job/:id', async (req, res) => {
+      const id = req.params.id
+      const query = { _id: new ObjectId(id) }
+      const result = await jobCollection.deleteOne(query)
+      res.send(result)
+    })
+
+
 
   } finally {
 //await deleted
