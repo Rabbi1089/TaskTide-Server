@@ -70,8 +70,53 @@ async function run() {
       res.send(result);
     });
 
+    //===== get all jobs from my bids =======//
+
+    app.get('/my-bids/:email' , async (req , res ) => {
+      const email = req.params.email;
+      const query = {'email' : email }
+      const result = await bidCollection.find(query).toArray();
+      res.send(result)
+    })
+
+
+    //Get all bid requests from db for job owner
+    app.get('/bid-requests/:email', async (req, res) => {
+      const email = req.params.email
+      const query = { email }
+      const result = await bidCollection.find(query).toArray()
+      res.send(result)
+    })
+
+
+    app.get("/bid-requests", async (req, res) => {
+      const result = await bidCollection.find().toArray();
+      res.send(result);
+    });
+
+    //update bid status
+
+    app.patch('/bid/:id', async(req , res ) => {
+      const id = req.params.id;
+      const status = req.body;
+      const query = { _id : new ObjectId(id)}
+      const updateDoc = {
+        $set : status
+      }
+      const result = await bidCollection.updateOne(query , updateDoc)
+    res.send(result)
+    })
+
     // delete a job data from db
     app.delete('/job/:id', async (req, res) => {
+      const id = req.params.id;
+      const query = { _id: new ObjectId(id) };
+      const result = await jobCollection.deleteOne(query);
+      res.send(result);
+    });
+
+    //== delete a bid data from db
+    app.delete('/bid/:id', async (req, res) => {
       const id = req.params.id;
       const query = { _id: new ObjectId(id) };
       const result = await jobCollection.deleteOne(query);
