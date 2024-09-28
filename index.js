@@ -1,20 +1,26 @@
-const express = require("express");
-const cors = require("cors");
-require("dotenv").config();
+const express = require('express');
+const cors = require('cors');
+require('dotenv').config()
+const jwt = require('jsonwebtoken');
 const { MongoClient, ServerApiVersion, ObjectId } = require("mongodb");
+const cookieParser = require('cookie-parser')
 const port = process.env.PORT || 9000;
 
 const app = express();
 
 const corsOptions = {
-  origin: ["http://localhost:5173", "http://localhost:5174"],
-  Credential: true,
+  origin: [
+    'http://localhost:5173',
+    'http://localhost:5174',
+    'https://solosphere.web.app',
+  ],
+  credentials: true,
   optionSuccessStatus: 200,
-};
+}
 
-app.use(cors(corsOptions));
-
-app.use(express.json());
+app.use(cors(corsOptions))
+app.use(express.json())
+app.use(cookieParser())
 
 const uri = `mongodb+srv://${process.env.DB_USER}:${process.env.DB_PASSWORD}@cluster0.t241ufd.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0`;
 
@@ -33,6 +39,34 @@ async function run() {
 
     const jobCollection = client.db("TaskTide").collection("Jobs");
     const bidCollection = client.db("TaskTide").collection("bids");
+
+
+        // jwt generate
+        app.post('/jwt', async (req, res) => {
+          const user = req.body
+          const token = jwt.sign(user, process.env.ACCESS_TOKEN_SECRET, {
+            expiresIn: '365d',
+          })
+          res
+            .cookie('token', token, {
+              httpOnly: true,
+              secure: process.env.NODE_ENV === 'production',
+              sameSite: process.env.NODE_ENV === 'production' ? 'none' : 'strict',
+            })
+            .send({ success: true })
+        })
+
+    // Clear token on logout
+    app.get('/logout', (req, res) => {
+      res
+        .clearCookie('token', {
+          httpOnly: true,
+          secure: process.env.NODE_ENV === 'production',
+          sameSite: process.env.NODE_ENV === 'production' ? 'none' : 'strict',
+          maxAge: 0,
+        })
+        .send({ success: true })
+    })
 
     // Get all jobs data from db
     app.get("/jobs", async (req, res) => {
