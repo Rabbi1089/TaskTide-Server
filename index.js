@@ -56,6 +56,26 @@ async function run() {
             .send({ success: true })
         })
 
+        // verify token
+      const verifyToken = (req, res , next) =>{
+        const token = req.cookies.token;
+        if (!token) {
+          return res.status(401).send("unauthorized access")
+        }
+        console.log(token);
+        if (token) {
+          jwt.verify(token , process.env.ACCESS_TOKEN_SECRET , (err , decoded) => {
+              if (err) {
+                return res.status(401).send("unauthorized access")
+              }
+              console.log(decoded);
+              req.user = decoded;
+              next()
+          })
+        }
+        
+      }
+
     // Clear token on logout
     app.get('/logout', (req, res) => {
       res
@@ -75,7 +95,7 @@ async function run() {
     });
 
     // Get a single job data from db using job id
-    app.get("/job/:id", async (req, res) => {
+    app.get("/job/:id",verifyToken, async (req, res) => {
       const id = req.params.id;
       const query = { _id: new ObjectId(id) };
       const result = await jobCollection.findOne(query);
@@ -90,15 +110,20 @@ async function run() {
     });
 
     //save a job in db
-    app.post("/job", async (req, res) => {
+    app.post("/job",verifyToken, async (req, res) => {
       const jobData = req.body;
       const result = await jobCollection.insertOne(jobData);
       res.send(result);
     });
 
     // get all jobs posted by a specific user
-    app.get("/jobs/:email", async (req, res) => {
+    app.get("/jobs/:email",verifyToken, async (req, res) => {
+      const tokenEmail = req.user.email;
+      console.log('token email ' , tokenEmail)
       const email = req.params.email;
+      if (tokenEmail !== email) {
+        return res.status(403).send("forbidden access")
+      }
       const query = { "buyer.email": email };
       const result = await jobCollection.find(query).toArray();
       res.send(result);
