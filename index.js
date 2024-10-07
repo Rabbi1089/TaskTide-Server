@@ -208,7 +208,7 @@ async function run() {
 }
 run().catch(console.dir);
 
-app.listen(port, () => console.log(`server running on ${port}`));
+app.listen(port, () => console.log(`server running on ${port}`))
 
 app.get("/", (req, res) => {
   res.send("TAsktide is running");
