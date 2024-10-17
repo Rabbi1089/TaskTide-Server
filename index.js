@@ -59,7 +59,7 @@ async function run() {
         // verify token
       const verifyToken = (req, res , next) =>{
         const token = req.cookies.token;
-        if (!token) {
+        if (!token ) {
           return res.status(401).send("unauthorized access")
         }
         console.log(token);
@@ -105,6 +105,13 @@ async function run() {
     //save a bid in db
     app.post("/bid", async (req, res) => {
       const bidData = req.body;
+      //check if a bid duplicate request
+      const alreadyApplied = await bidCollection.findOne({
+        email : bidData.email,
+        jobId : bidData.jobId
+      })
+      console.log('already applied')
+
       const result = await bidCollection.insertOne(bidData);
       res.send(result);
     });
@@ -193,8 +200,23 @@ async function run() {
           ...jobData,
         },
       };
-      const result = await jobCollection.updateOne(query, updateDoc, options);
+      const result = await jobCollection.updateOne(query, updateDoc, options)
       res.send(result)
+    });
+
+        // Get all jobs data from db for pagination
+        app.get('/all-jobs', async (req, res) => {
+          const page = req.query.page - 1
+          const size = parseInt(req.query.size)
+          console.log(page, size);
+          const result = await jobCollection.find().skip(page * size).limit(size).toArray();
+          res.send(result);
+        });
+
+    // Get count jobs  from db
+    app.get('/jobs-count', async (req, res) => {
+      const count = await jobCollection.countDocuments()
+      res.send({count});
     });
 
     //await deleted
